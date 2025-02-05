@@ -1,0 +1,265 @@
+# native python libraries
+from datetime import datetime
+from urllib.request import Request, urlopen
+from html.parser import HTMLParser
+import time
+import csv
+import json
+
+# external libraries (need pip install)
+import validators
+
+# NOTE: match-case conditionals only work for python >= 3.10, otherwise rewrite as if-else or install newer version
+# will also need to pip install external libraries to newer version if not default
+
+# Class definitions
+class House():
+    def __init__(self, url):
+        self.url = url
+        self.dict_essential_info = {
+            "Price": None,
+            "Bedrooms": None,
+            "Bathrooms": None,
+            "Full Baths": None,
+            "Half Baths": None,
+            "Square Footage": None,
+            "Lot SQFT": None,
+            "Year Built": None,
+            "Type": None,
+            "Sub-Type": None,
+            "Style": None,
+            "Status": None
+        }
+        self.dict_community_info = {
+            "Address": None,
+            "Subdivision": None,
+            "City": None,
+            "Province": None,
+            "Postal Code": None
+        }
+        self.amenities = {
+            "Parking Spaces": None,
+            "Parking": None, 
+            "# of Garages": None
+        }
+   
+class HouseParser(HTMLParser):
+    def __init__(self, url):
+        super().__init__()
+        self.House = House(url)
+        self.current_tag = None
+        self.current_data = []
+        self.current_tag_id = None
+        self.current_tag_class = None
+        self.current_listing_section = None
+        self.tag_to_parse = None
+        self.class_to_parse = None
+        self.previous_key = None
+        self.dict_generic = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "div":
+            dict_attrs = dict(attrs)
+            if "id" in dict_attrs:
+                self.current_tag_id = dict_attrs["id"]
+            if "class" in dict_attrs:
+                self.current_tag_class = dict_attrs["class"]
+                self.tag_to_parse = "h4"
+        self.current_tag = tag
+             
+    def handle_data(self, data):
+        if self.current_tag_id == "listing-body" and self.current_tag_class == "dataset":
+            #print(f"class: {self.current_tag_class} tag: {self.current_tag}")
+            
+            # get data/current listing section
+            self.current_data = data.strip()    
+            if self.current_tag == "h4":
+                self.current_listing_section = data.strip()
+            
+            # set generic dict based on current listing section
+            match self.current_listing_section:
+                case "Essential Information":
+                    self.dict_generic = self.House.dict_essential_info
+                case "Community Information":
+                    self.dict_generic = self.House.dict_community_info
+                case "Amenities":
+                    self.dict_generic = self.House.amenities
+                case _:
+                    pass
+
+            # if current_data is dict key, then next tag should have corresponding value
+            # key/value pair defined by strong/span tag pairs within dataset class div
+            if self.current_data in self.dict_generic:           
+                self.previous_key = self.current_data
+                pass 
+            if self.previous_key in self.dict_generic:
+                self.dict_generic[self.previous_key] = self.current_data
+
+            # match generic dict back based on current section
+            match self.current_listing_section:
+                case "Essential Information":
+                    self.House.dict_essential_info = self.dict_generic
+                case "Community Information":
+                    self.House.dict_community_info = self.dict_generic
+                case "Amenities":
+                    self.House.amenities = self.dict_generic
+                case _:
+                    pass
+            
+    def handle_endtag(self, tag):
+        pass
+
+# add/remove variables based on what you want/what's parsed
+class HouseOutput():
+    def __init__(self):
+        self.url = None
+        self.Address = None
+        self.Subdivision = None
+        self.PostalCode = None
+        self.Price = None
+        self.Bedrooms = None
+        self.Bathrooms = None
+        self.FullBaths = None
+        self.HalfBaths = None
+        self.SquareFootage = None
+        self.LotSQFT = None
+        self.YearBuilt = None
+        self.Type = None
+        self.SubType = None
+        self.Style = None
+        self.ParkingSpaces = None
+        self.Parking = None
+        self.NumGarages = None
+        #self.Status = None
+
+
+# Function Definitions
+def get_html_page(str_url, bool_decode = True):
+    #sleep in case of 503 error from too many requests
+    #time.sleep(0.05)
+    req = Request(str_url, headers={'User-Agent': 'Mozilla/5.0'})
+    html = urlopen(req)
+    return html.read().decode('utf-8') if bool_decode else html.read()
+
+def output_house_list(int_output_format, list_houses, date_today):
+    dict_output_format = {
+        1: "CSV",
+        2: "JSON",
+        3: "CLI"
+    }
+
+    for house in list_houses:
+        house_output = HouseOutput()
+        house_output.url = house.url
+        house_output.Address = house.dict_community_info["Address"]
+        house_output.Subdivision = house.dict_community_info["Subdivision"]
+        house_output.PostalCode = house.dict_community_info["Postal Code"]
+        house_output.Price = house.dict_essential_info["Price"]
+        house_output.Bedrooms = house.dict_essential_info["Bedrooms"]
+        house_output.Bathrooms = house.dict_essential_info["Bathrooms"]
+        house_output.FullBaths = house.dict_essential_info["Full Baths"]
+        house_output.HalfBaths = house.dict_essential_info["Half Baths"]
+        house_output.SquareFootage = house.dict_essential_info["Square Footage"]
+        house_output.LotSQFT = house.dict_essential_info["Lot SQFT"]
+        house_output.YearBuilt = house.dict_essential_info["Year Built"]
+        house_output.Type = house.dict_essential_info["Type"]
+        house_output.SubType = house.dict_essential_info["Sub-Type"]
+        house_output.Style = house.dict_essential_info["Style"]
+        house_output.ParkingSpaces = house.amenities["Parking Spaces"]
+        house_output.Parking = house.amenities["Parking"]
+        house_output.NumGarages = house.amenities["# of Garages"]
+        #house_output.Status = house.dict_essential_info["Status"]
+
+    print(f"\nOutputting House list to {dict_output_format[int_output_format]}...")
+
+    match int_output_format:
+        case 1:
+            str_output_file = f"house_list_output_{date_today}.csv"
+            with open(str_output_file, "w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(house_output.__dict__.keys())
+                for house in list_houses:
+                    writer.writerow(house_output.__dict__.values())
+            print(f"Output file: {str_output_file}")
+        case 2:
+            str_output_file = f"house_list_output_{date_today}.json"
+            with open(str_output_file, "w") as file:
+                json.dump([house_output.__dict__ for house in list_houses], file, indent=4)
+            print(f"Output file: {str_output_file}")
+        case 3:
+            str_separator = "-"*40
+            for house in list_houses:
+                print(f"{str_separator}\n")
+                for key, value in house_output.__dict__.items():
+                    print(f"{key}: {value}")
+        case _:
+            pass
+
+
+#################
+# PROGRAM START #
+#################
+date_today = datetime.today().date()
+list_houses = []
+ 
+str_separator = "-"*40
+print(f"{str_separator}\nHTML House Parser - Start\n{str_separator}")
+
+bool_continue = True
+while bool_continue:
+
+    # get/validate URL input
+    bool_pass_input = False
+    while not bool_pass_input:
+        var_input = input("Enter CalgaryHomes URL to parse: ")
+        bool_pass_input = validators.url(var_input) and "calgaryhomes.ca" in var_input
+        if not bool_pass_input:
+            print("Invalid input, please enter a valid CalgaryHomes URL!")
+
+    # parse URL page for house info
+    print(f"\nParsing house info...")
+    house_page = get_html_page(var_input)
+    house_parser = HouseParser(var_input)
+    house_parser.feed(house_page)
+    print(f"House info parsed!")
+
+    list_houses.append(house_parser.House)
+
+    """
+    str_separator = "-"*20
+    print(f"\nEssential Info\n{str_separator}")
+    print(house_parser.House.dict_essential_info)
+    print(f"\nCommunity Info\n{str_separator}")
+    print(house_parser.House.dict_community_info)
+    print(f"\nAmenities\n{str_separator}")
+    print(house_parser.House.amenities)
+    """
+
+    # check if want to continue parsing
+    var_input = input("\nContinue? (y/n): ")
+    while var_input.lower() not in ["y", "n"]:
+        print("Invalid input, please enter y or n")
+        var_input = input("\nContinue? (y/n): ")   
+    bool_continue = True if var_input.lower() == "y" else False
+
+# get/validate output format option
+var_input = input("""
+Output format options:
+[1] CSV 
+[2] JSON
+[3] CLI (command line)
+Enter number for output choice: """
+)
+
+while not var_input.isdigit():
+    print("Invalid input, please enter a number")
+    var_input = input("Enter number for output choice: ")
+while int(var_input) not in [1, 2, 3]:
+    print("Invalid input, please enter a number 1, 2, or 3")
+    var_input = input("Enter number for output choice: ")
+
+int_output_format = int(var_input)
+output_house_list(int_output_format, list_houses, date_today)
+
+exit()
+
