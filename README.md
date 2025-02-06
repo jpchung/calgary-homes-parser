@@ -7,6 +7,12 @@ Instructions
 External libaries to install:
 
     $ pip install validators
+    $ pip install pandas
+
+Or if on Windows:
+
+    $ py -m pip install validators
+    $ py -m pip install pandas
 
 To execute the program:
 
@@ -29,12 +35,13 @@ The program will parse the html page for relevant listing details, and ask if yo
 If you no longer wish to continue, choose the corresponding format option you want your list of houses output to:
 
     $ Output format options:
-    $ [1] CSV
-    $ [2] JSON
-    $ [3] CLI (command line)
+    $ [1] csv
+    $ [2] xlsx (excel)
+    $ [3] json
+    $ [4] cli (command line)
     $ Enter number for output choice: 1
 
 The file will then be output with the date in the title:
 
-    $ Outputting House list to CSV...
+    $ Outputting House list to csv...
     $ Output file: house_list_output_2025-02-05.csv
