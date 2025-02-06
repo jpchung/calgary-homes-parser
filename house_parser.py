@@ -229,7 +229,6 @@ while bool_continue:
     bool_continue = True if var_input.lower() == "y" else False
 
 # get/validate output format option
-# get/validate output format option
 var_input = input("""
 Output format options:
 [1] csv 
