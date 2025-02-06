@@ -238,12 +238,17 @@ Output format options:
 Enter number for output choice: """
 )
 
-while not var_input.isdigit():
-    print("Invalid input, please enter a number")
-    var_input = input("Enter number for output choice: ")
-while int(var_input) not in [1, 2, 3, 4]:
-    print("Invalid input, please enter a number 1, 2, 3, or 4")
-    var_input = input("Enter number for output choice: ")
+while not var_input.isdigit() or int(var_input) not in [1, 2, 3, 4]:
+    print("\nInvalid input, please enter a number from 1-4")
+    var_input = input("""
+Output format options:
+[1] csv 
+[2] xlsx (excel)
+[3] json
+[4] cli (command line)
+Enter number for output choice: """
+    )
+int_output_format = int(var_input)
 
 int_output_format = int(var_input)
 output_house_list(int_output_format, list_houses, date_today)
