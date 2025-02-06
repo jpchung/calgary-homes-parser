@@ -8,6 +8,7 @@ import json
 
 # external libraries (need pip install)
 import validators
+import pandas as pd
 
 # NOTE: match-case conditionals only work for python >= 3.10, otherwise rewrite as if-else or install newer version
 # will also need to pip install external libraries to newer version if not default
@@ -143,9 +144,10 @@ def get_html_page(str_url, bool_decode = True):
 
 def output_house_list(int_output_format, list_houses, date_today):
     dict_output_format = {
-        1: "CSV",
-        2: "JSON",
-        3: "CLI"
+        1: "csv",
+        2: "xlsx",
+        3: "json",
+        4: "cli"
     }
 
     for house in list_houses:
@@ -170,11 +172,12 @@ def output_house_list(int_output_format, list_houses, date_today):
         house_output.NumGarages = house.amenities["# of Garages"]
         #house_output.Status = house.dict_essential_info["Status"]
 
-    print(f"\nOutputting House list to {dict_output_format[int_output_format]}...")
-
+    print(f"\nOutputting House list to {dict_output_format[int_output_format]}...") 
+    if int_output_format in [1, 2, 3]:
+        str_output_file = f"house_list_output_{date_today}.{dict_output_format[int_output_format]}"
+   
     match int_output_format:
         case 1:
-            str_output_file = f"house_list_output_{date_today}.csv"
             with open(str_output_file, "w", newline="") as file:
                 writer = csv.writer(file)
                 writer.writerow(house_output.__dict__.keys())
@@ -182,7 +185,11 @@ def output_house_list(int_output_format, list_houses, date_today):
                     writer.writerow(house_output.__dict__.values())
             print(f"Output file: {str_output_file}")
         case 2:
-            str_output_file = f"house_list_output_{date_today}.json"
+            for house in list_houses:
+                df = pd.DataFrame(data=house_output.__dict__, index=[0])
+                df.to_excel(str_output_file)
+            print(f"Output file: {str_output_file}")
+        case 3:
             with open(str_output_file, "w") as file:
                 json.dump([house_output.__dict__ for house in list_houses], file, indent=4)
             print(f"Output file: {str_output_file}")
@@ -245,17 +252,18 @@ while bool_continue:
 # get/validate output format option
 var_input = input("""
 Output format options:
-[1] CSV 
-[2] JSON
-[3] CLI (command line)
+[1] csv 
+[2] xlsx (excel)
+[3] json
+[4] cli (command line)
 Enter number for output choice: """
 )
 
 while not var_input.isdigit():
     print("Invalid input, please enter a number")
     var_input = input("Enter number for output choice: ")
-while int(var_input) not in [1, 2, 3]:
-    print("Invalid input, please enter a number 1, 2, or 3")
+while int(var_input) not in [1, 2, 3, 4]:
+    print("Invalid input, please enter a number 1, 2, 3, or 4")
     var_input = input("Enter number for output choice: ")
 
 int_output_format = int(var_input)
