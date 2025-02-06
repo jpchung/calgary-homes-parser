@@ -150,9 +150,6 @@ def output_house_list(int_output_format, list_houses, date_today):
         4: "cli"
     }
 
-    for house in list_houses:
-        house_output = HouseOutput(house)
-
     print(f"\nOutputting House list to {dict_output_format[int_output_format]}...") 
     if int_output_format in [1, 2, 3]:
         str_output_file = f"house_list_output_{date_today}.{dict_output_format[int_output_format]}"
@@ -161,24 +158,24 @@ def output_house_list(int_output_format, list_houses, date_today):
         case 1:
             with open(str_output_file, "w", newline="") as file:
                 writer = csv.writer(file)
-                writer.writerow(house_output.__dict__.keys())
+                writer.writerow(list_houses[0].__dict__.keys())
                 for house in list_houses:
-                    writer.writerow(house_output.__dict__.values())
+                    writer.writerow(house.__dict__.values())
             print(f"Output file: {str_output_file}")
         case 2:
             for house in list_houses:
-                df = pd.DataFrame(data=house_output.__dict__, index=[0])
+                df = pd.DataFrame(data=house.__dict__, index=[0])
                 df.to_excel(str_output_file)
             print(f"Output file: {str_output_file}")
         case 3:
             with open(str_output_file, "w") as file:
-                json.dump([house_output.__dict__ for house in list_houses], file, indent=4)
+                json.dump([house.__dict__ for house in list_houses], file, indent=4)
             print(f"Output file: {str_output_file}")
-        case 3:
+        case 4:
             str_separator = "-"*40
             for house in list_houses:
                 print(f"{str_separator}\n")
-                for key, value in house_output.__dict__.items():
+                for key, value in house.__dict__.items():
                     print(f"{key}: {value}")
         case _:
             pass
@@ -211,7 +208,8 @@ while bool_continue:
     house_parser.feed(house_page)
     print(f"House info parsed!")
 
-    list_houses.append(house_parser.House)
+    house_output = HouseOutput(house_parser.House)
+    list_houses.append(house_output)
 
     """
     str_separator = "-"*20
