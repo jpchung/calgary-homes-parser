@@ -112,26 +112,26 @@ class HouseParser(HTMLParser):
 
 # add/remove variables based on what you want/what's parsed
 class HouseOutput():
-    def __init__(self):
-        self.url = None
-        self.Address = None
-        self.Subdivision = None
-        self.PostalCode = None
-        self.Price = None
-        self.Bedrooms = None
-        self.Bathrooms = None
-        self.FullBaths = None
-        self.HalfBaths = None
-        self.SquareFootage = None
-        self.LotSQFT = None
-        self.YearBuilt = None
-        self.Type = None
-        self.SubType = None
-        self.Style = None
-        self.ParkingSpaces = None
-        self.Parking = None
-        self.NumGarages = None
-        #self.Status = None
+    def __init__(self, house):
+        self.url = house.url
+        self.Address = house.dict_community_info["Address"]
+        self.Subdivision = house.dict_community_info["Subdivision"]
+        self.PostalCode = house.dict_community_info["Postal Code"]
+        self.Price = house.dict_essential_info["Price"]
+        self.Bedrooms = house.dict_essential_info["Bedrooms"]
+        self.Bathrooms = house.dict_essential_info["Bathrooms"]
+        self.FullBaths = house.dict_essential_info["Full Baths"]
+        self.HalfBaths = house.dict_essential_info["Half Baths"]
+        self.SquareFootage = house.dict_essential_info["Square Footage"]
+        self.LotSQFT = house.dict_essential_info["Lot SQFT"]
+        self.YearBuilt = house.dict_essential_info["Year Built"]
+        self.Type = house.dict_essential_info["Type"]
+        self.SubType = house.dict_essential_info["Sub-Type"]
+        self.Style = house.dict_essential_info["Style"]
+        self.ParkingSpaces = house.amenities["Parking Spaces"]
+        self.Parking = house.amenities["Parking"]
+        self.NumGarages = house.amenities["# of Garages"]
+        #self.Status = house.dict_essential_info["Status"]
 
 
 # Function Definitions
@@ -151,26 +151,7 @@ def output_house_list(int_output_format, list_houses, date_today):
     }
 
     for house in list_houses:
-        house_output = HouseOutput()
-        house_output.url = house.url
-        house_output.Address = house.dict_community_info["Address"]
-        house_output.Subdivision = house.dict_community_info["Subdivision"]
-        house_output.PostalCode = house.dict_community_info["Postal Code"]
-        house_output.Price = house.dict_essential_info["Price"]
-        house_output.Bedrooms = house.dict_essential_info["Bedrooms"]
-        house_output.Bathrooms = house.dict_essential_info["Bathrooms"]
-        house_output.FullBaths = house.dict_essential_info["Full Baths"]
-        house_output.HalfBaths = house.dict_essential_info["Half Baths"]
-        house_output.SquareFootage = house.dict_essential_info["Square Footage"]
-        house_output.LotSQFT = house.dict_essential_info["Lot SQFT"]
-        house_output.YearBuilt = house.dict_essential_info["Year Built"]
-        house_output.Type = house.dict_essential_info["Type"]
-        house_output.SubType = house.dict_essential_info["Sub-Type"]
-        house_output.Style = house.dict_essential_info["Style"]
-        house_output.ParkingSpaces = house.amenities["Parking Spaces"]
-        house_output.Parking = house.amenities["Parking"]
-        house_output.NumGarages = house.amenities["# of Garages"]
-        #house_output.Status = house.dict_essential_info["Status"]
+        house_output = HouseOutput(house)
 
     print(f"\nOutputting House list to {dict_output_format[int_output_format]}...") 
     if int_output_format in [1, 2, 3]:
