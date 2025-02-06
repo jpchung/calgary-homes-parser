@@ -163,9 +163,11 @@ def output_house_list(int_output_format, list_houses, date_today):
                     writer.writerow(house.__dict__.values())
             print(f"Output file: {str_output_file}")
         case 2:
+            df_union = pd.DataFrame()
             for house in list_houses:
-                df = pd.DataFrame(data=house.__dict__, index=[0])
-                df.to_excel(str_output_file)
+                df_house = pd.DataFrame(data=house.__dict__, index=[0])
+                df_union = pd.concat([df_union, df_house])
+            df_union.to_excel(str_output_file)
             print(f"Output file: {str_output_file}")
         case 3:
             with open(str_output_file, "w") as file:
@@ -250,7 +252,6 @@ Enter number for output choice: """
     )
 int_output_format = int(var_input)
 
-int_output_format = int(var_input)
 output_house_list(int_output_format, list_houses, date_today)
 
 exit()
